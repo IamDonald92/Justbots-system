@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5D6927">
+<title>Just Bots · Quotes and Invoices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --olive:#5D6927; --olive-dk:#454F1B; --olive-lt:#EDF0E0;
+  --cream:#F3F0DF; --cream-dk:#E6E2CB;
+  --ink:#1E1E22; --mid:#5E6258; --faint:#9A9E92;
+  --line:#DDDCD0; --paper:#FFFFFF; --bg:#F7F6F0;
+  --amber:#8A6A12; --amber-bg:#FDF6E3;
+  --red:#9B2C22; --red-bg:#FBEEEC;
+  --r:6px;
+  --shadow:0 1px 2px rgba(30,30,34,.05), 0 8px 24px rgba(30,30,34,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:Outfit,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--olive);outline-offset:2px;border-radius:3px}
+
+/* ---------- chrome ---------- */
+header{
+  background:var(--cream); border-bottom:1px solid var(--cream-dk);
+  padding:10px 16px; display:flex; align-items:center; gap:14px;
+  position:sticky; top:0; z-index:40;
+}
+.brand{display:flex;align-items:baseline;gap:9px;margin-right:auto;min-width:0}
+.brand b{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.brand b span{color:var(--olive)}
+.brand i{font-style:normal;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);font-weight:600}
+.who{display:flex;align-items:center;gap:6px}
+.who select{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px 9px;font-size:13px;font-weight:500
+}
+.ghost{
+  background:transparent;border:1px solid var(--line);border-radius:var(--r);
+  padding:6px 11px;font-size:13px;font-weight:500;color:var(--mid);background:var(--paper)
+}
+.ghost:hover{border-color:var(--olive);color:var(--olive)}
+
+/* ---------- layout ---------- */
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 470px;gap:0;align-items:start}
+.catalogue{padding:16px;min-width:0}
+.doc{
+  border-left:1px solid var(--line); background:var(--paper);
+  min-height:calc(100vh - 53px); padding:16px; position:sticky; top:53px;
+  max-height:calc(100vh - 53px); overflow-y:auto;
+}
+
+/* ---------- catalogue ---------- */
+.tools{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.search{
+  flex:1 1 220px;min-width:0;display:flex;align-items:center;gap:8px;
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:0 11px
+}
+.search input{border:0;background:none;padding:10px 0;width:100%;outline:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{
+  border:1px solid var(--line);background:var(--paper);border-radius:100px;
+  padding:6px 13px;font-size:12.5px;font-weight:500;color:var(--mid)
+}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip:hover{border-color:var(--olive)}
+
+.plist{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.prow{
+  background:var(--paper);display:grid;grid-template-columns:1fr auto auto;
+  gap:12px;align-items:center;padding:10px 13px
+}
+.prow:hover{background:var(--olive-lt)}
+.prow.on{background:var(--olive-lt)}
+.pname{min-width:0}
+.pname b{display:block;font-weight:500;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pname small{color:var(--faint);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.pprice{font-variant-numeric:tabular-nums;font-weight:600;font-size:14.5px;white-space:nowrap}
+.add{
+  border:1px solid var(--olive);background:var(--paper);color:var(--olive);
+  border-radius:var(--r);padding:5px 12px;font-size:13px;font-weight:600;min-width:62px
+}
+.add:hover{background:var(--olive);color:#fff}
+.add.has{background:var(--olive);color:#fff}
+.empty{padding:34px 16px;text-align:center;color:var(--mid);background:var(--paper);border:1px dashed var(--line);border-radius:var(--r)}
+
+/* ---------- document pane ---------- */
+.toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.toggle button{background:var(--paper);border:0;padding:9px;font-size:13.5px;font-weight:600;color:var(--mid)}
+.toggle button[aria-pressed="true"]{background:var(--olive);color:#fff}
+
+.docno{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--cream);border-radius:var(--r);padding:9px 12px;margin-bottom:14px
+}
+.docno b{font-variant-numeric:tabular-nums;font-size:15px;letter-spacing:.01em}
+.docno small{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mid);font-weight:600}
+
+h3.sec{
+  font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
+  font-weight:700;margin:0 0 8px;padding-bottom:5px;border-bottom:1px solid var(--line)
+}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.fields .full{grid-column:1/-1}
+label.f{display:block}
+label.f span{display:block;font-size:11px;color:var(--mid);margin-bottom:3px;font-weight:500}
+label.f input,label.f textarea,label.f select{
+  width:100%;background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--r);padding:8px 10px;font-size:14px
+}
+label.f textarea{resize:vertical;min-height:56px}
+label.f input:focus,label.f textarea:focus{border-color:var(--olive);outline:none}
+
+.lines{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.line{display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px 11px;border-bottom:1px solid var(--line);align-items:start}
+.line:last-child{border-bottom:0}
+.line .ln b{display:block;font-weight:500;font-size:14px}
+.line .ln small{color:var(--faint);font-size:11.5px}
+.line .rt{display:flex;align-items:center;gap:8px}
+.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.qty button{border:0;background:var(--paper);width:26px;height:28px;font-size:15px;line-height:1;color:var(--mid)}
+.qty button:hover{background:var(--olive-lt);color:var(--olive)}
+.qty input{width:38px;border:0;text-align:center;padding:0;height:28px;font-variant-numeric:tabular-nums;font-size:13.5px}
+.amt{font-variant-numeric:tabular-nums;font-weight:600;min-width:74px;text-align:right;font-size:14px}
+.kill{border:0;background:none;color:var(--faint);font-size:17px;line-height:1;padding:0 2px}
+.kill:hover{color:var(--red)}
+.editprice{border:0;background:none;color:var(--faint);font-size:11.5px;text-decoration:underline;padding:0}
+.editprice:hover{color:var(--olive)}
+
+.totals{border-top:2px solid var(--ink);padding-top:10px;margin-bottom:16px}
+.trow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:14px}
+.trow span{color:var(--mid)}
+.trow b{font-variant-numeric:tabular-nums;font-weight:500}
+.trow.grand{border-top:1px solid var(--line);margin-top:6px;padding-top:9px;font-size:19px}
+.trow.grand span{color:var(--ink);font-weight:600}
+.trow.grand b{font-weight:700;color:var(--olive)}
+.tinput{width:92px;border:1px solid var(--line);border-radius:var(--r);padding:5px 8px;text-align:right;font-variant-numeric:tabular-nums;font-size:13.5px}
+
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{
+  border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:var(--r);
+  padding:11px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px
+}
+.btn:hover{background:#000}
+.btn.olive{background:var(--olive);border-color:var(--olive)}
+.btn.olive:hover{background:var(--olive-dk)}
+.btn.out{background:var(--paper);color:var(--ink);border-color:var(--line)}
+.btn.out:hover{border-color:var(--ink)}
+.btn.full{grid-column:1/-1}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+.note{background:var(--amber-bg);border:1px solid #E8D9A8;border-left:3px solid var(--amber);border-radius:var(--r);padding:9px 11px;font-size:12.5px;margin-bottom:14px;color:#5B4A15}
+.note b{color:var(--amber)}
+
+/* ---------- modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(30,30,34,.45);display:none;z-index:60;padding:18px;overflow-y:auto}
+.scrim.on{display:block}
+.modal{background:var(--paper);border-radius:10px;max-width:560px;margin:40px auto;padding:20px;box-shadow:var(--shadow)}
+.modal h2{margin:0 0 4px;font-size:20px;font-weight:700;letter-spacing:-.01em}
+.modal p.sub{margin:0 0 16px;color:var(--mid);font-size:13.5px}
+.hlist{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;max-height:340px;overflow-y:auto}
+.hrow{background:var(--paper);padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.hrow:hover{background:var(--olive-lt)}
+.hrow b{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.hrow small{display:block;color:var(--mid);font-size:12px}
+.hrow .amt{font-size:14px}
+
+/* ---------- toast ---------- */
+#toast{
+  position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:100px;font-size:14px;
+  opacity:0;pointer-events:none;transition:.22s;z-index:90;max-width:90vw;text-align:center
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast.bad{background:var(--red)}
+
+/* ---------- mobile ---------- */
+.mobilebar{display:none}
+@media (max-width:940px){
+  .wrap{grid-template-columns:1fr}
+  .doc{
+    position:fixed;inset:0;top:0;z-index:70;border-left:0;max-height:none;min-height:100vh;
+    transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;padding-bottom:90px
+  }
+  .doc.open{transform:translateX(0)}
+  .doc .closebar{display:flex}
+  .catalogue{padding-bottom:86px}
+  .mobilebar{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:65;
+    background:var(--paper);border-top:1px solid var(--line);padding:10px 14px;
+    align-items:center;gap:12px;padding-bottom:calc(10px + env(safe-area-inset-bottom))
+  }
+  .mobilebar .sum{margin-right:auto}
+  .mobilebar .sum b{display:block;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+  .mobilebar .sum small{color:var(--mid);font-size:12px}
+}
+.closebar{display:none;align-items:center;margin-bottom:12px}
+
+@media print{ body{background:#fff} .catalogue,header,.mobilebar,.actions{display:none} .doc{position:static;border:0} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><b>Just<span>BOTS</span></b><i>Quotes and invoices</i></div>
+  <div class="who">
+    <select id="user" aria-label="Who is creating this document">
+      <option value="Donald">Donald</option>
+      <option value="Precious">Precious</option>
+    </select>
+    <button class="ghost" id="btnHistory">History</button>
+    <button class="ghost" id="btnSettings">Settings</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ CATALOGUE ============ -->
+  <section class="catalogue">
+    <div class="tools">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9A9E92" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search products" autocomplete="off">
+      </div>
+      <button class="ghost" id="btnCustom">Add custom line</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div id="plist" class="plist"></div>
+  </section>
+
+  <!-- ============ DOCUMENT ============ -->
+  <aside class="doc" id="doc">
+    <div class="closebar">
+      <button class="ghost" id="btnBack">Back to products</button>
+    </div>
+
+    <div class="toggle">
+      <button id="tQuote" aria-pressed="true">Quotation</button>
+      <button id="tInvoice" aria-pressed="false">Invoice</button>
+    </div>
+
+    <div class="docno">
+      <div><small id="noLabel">Quotation number</small><b id="docNo">JB-Q-0001</b></div>
+      <button class="ghost" id="btnNewNo">New</button>
+    </div>
+
+    <h3 class="sec">Client</h3>
+    <div class="fields">
+      <label class="f full"><span>Name or company</span><input id="cName" placeholder="Who is this for"></label>
+      <label class="f"><span>Phone</span><input id="cPhone" placeholder="267 7X XXX XXX"></label>
+      <label class="f"><span>Email</span><input id="cEmail" type="email" placeholder="Optional"></label>
+      <label class="f full"><span>Delivery address</span><input id="cAddr" placeholder="Optional"></label>
+      <label class="f"><span>Date</span><input id="dDate" type="date"></label>
+      <label class="f"><span id="dueLabel">Valid until</span><input id="dDue" type="date"></label>
+    </div>
+
+    <h3 class="sec">Items</h3>
+    <div class="lines" id="lines"></div>
+
+    <div class="totals">
+      <div class="trow"><span>Subtotal</span><b id="tSub">P0.00</b></div>
+      <div class="trow"><span>Discount</span><input class="tinput" id="tDisc" type="number" min="0" step="0.01" value="0"></div>
+      <div class="trow">
+        <span>Delivery</span>
+        <select class="tinput" id="tDelSel" style="width:150px;text-align:left">
+          <option value="0">Collection, free</option>
+          <option value="40">Gaborone, P40</option>
+          <option value="custom">Outside Gaborone</option>
+        </select>
+      </div>
+      <div class="trow" id="delCustomRow" style="display:none"><span>Delivery amount</span><input class="tinput" id="tDel" type="number" min="0" step="0.01" value="0"></div>
+      <div class="trow grand"><span>Total</span><b id="tTotal">P0.00</b></div>
+    </div>
+
+    <h3 class="sec">Notes</h3>
+    <div class="fields"><label class="f full"><textarea id="dNotes" placeholder="Anything the client should know"></textarea></label></div>
+
+    <div class="actions">
+      <button class="btn olive full" id="btnSave">Save to records</button>
+      <button class="btn" id="btnPdf">Download PDF</button>
+      <button class="btn out" id="btnWa">Send on WhatsApp</button>
+      <button class="btn out full" id="btnClear">Clear and start again</button>
+    </div>
+  </aside>
+</div>
+
+<div class="mobilebar">
+  <div class="sum"><b id="mTotal">P0.00</b><small id="mCount">No items yet</small></div>
+  <button class="btn olive" id="btnOpenDoc">Open document</button>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="scrim" id="scrimHistory"><div class="modal">
+  <h2>Saved documents</h2>
+  <p class="sub">The most recent quotes and invoices from your records. Tap one to load it back in.</p>
+  <div class="hlist" id="hlist"></div>
+  <div class="actions" style="margin-top:14px"><button class="btn out full" data-close>Close</button></div>
+</div></div>
+
+<div class="scrim" id="scrimSettings"><div class="modal">
+  <h2>Settings</h2>
+  <p class="sub">These stay on this device only. They are never uploaded and never stored in the code.</p>
+  <h3 class="sec">Records connection</h3>
+  <div class="fields">
+    <label class="f full"><span>Apps Script web app URL</span><input id="sUrl" placeholder="https://script.google.com/macros/s/.../exec"></label>
+  </div>
+  <h3 class="sec">Banking details, shown on invoices</h3>
+  <div class="fields">
+    <label class="f full"><span>Bank details block</span><textarea id="sBank" placeholder="Bank name&#10;Account name&#10;Account number&#10;Branch"></textarea></label>
+  </div>
+  <h3 class="sec">Business details</h3>
+  <div class="fields">
+    <label class="f"><span>Phone</span><input id="sPhone" placeholder="267 73820881"></label>
+    <label class="f"><span>Email</span><input id="sEmail" placeholder="precious@justbw.co.bw"></label>
+    <label class="f full"><span>Quote validity, days</span><input id="sValid" type="number" min="1" value="14"></label>
+  </div>
+  <div class="actions"><button class="btn olive full" id="btnSaveSettings">Save settings</button><button class="btn out full" data-close>Close</button></div>
+</div></div>
+
+<div class="scrim" id="scrimCustom"><div class="modal">
+  <h2>Add a custom line</h2>
+  <p class="sub">For anything not in the product list, including services and once off charges.</p>
+  <div class="fields">
+    <label class="f full"><span>Description</span><input id="xName" placeholder="What are you charging for"></label>
+    <label class="f"><span>Unit price</span><input id="xPrice" type="number" min="0" step="0.01" placeholder="0.00"></label>
+    <label class="f"><span>Quantity</span><input id="xQty" type="number" min="1" step="1" value="1"></label>
+  </div>
+  <div class="actions"><button class="btn olive full" id="btnAddCustom">Add to document</button><button class="btn out full" data-close>Close</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+/* =====================================================================
+   PRODUCTS
+   Every price below is checked line by line against the Just Bots price
+   lists dated August 2026. Any line can still be repriced inside a single
+   document without changing this list.
+
+   Not yet priced anywhere, so not listed here:
+     Sheroo Motlopi Coffee 150g, the pack actually stocked
+     Aneela Cranberry Trail Mix 120g
+     Donut Heart Cookies, which sit inside Package 3
+   ===================================================================== */
+const PRODUCTS = [
+  // ---- Pantry ----
+  {c:'Pantry', b:'Tatso',          n:'Marinade, BBQ, 200ml',                p:18},
+  {c:'Pantry', b:'Tatso',          n:'Marinade, Lemon and Herb, 200ml',     p:18},
+  {c:'Pantry', b:'Sheroo',         n:'Motlopi Coffee, 100g',                p:70},
+  {c:'Pantry', b:'Sheroo',         n:'Motlopi Coffee, 200g',                p:90},
+  {c:'Pantry', b:'Divine Morula',  n:'Morula Jam, 250g',                    p:48},
+  {c:'Pantry', b:'Divine Morula',  n:'Morula Atchar, 270g',                 p:48},
+  {c:'Pantry', b:'Divine Morula',  n:'Mmilo Juice, 330ml',                  p:16},
+  {c:'Pantry', b:'Maungo Craft',   n:'Hot Sauce, Medium, 250ml',            p:40},
+  {c:'Pantry', b:'Maungo Craft',   n:'Marula, Lemon and Vanilla Jam, 120g', p:35},
+  {c:'Pantry', b:'CK Foods',       n:'Yoghurt',                             p:15},
+  {c:'Pantry', b:'CK Foods',       n:'Granola, 250g',                       p:48},
+  {c:'Pantry', b:'Boasa Brands',   n:'Mixed Dried Fruits and Raisins',      p:15},
+  {c:'Pantry', b:'Boasa Brands',   n:'Dried Mango, 40g',                    p:25},
+  {c:'Pantry', b:'Boasa Brands',   n:'Dried Banana, 40g',                   p:15},
+  {c:'Pantry', b:'Aneela Africa',  n:'Roasted Peanuts, 70g',                p:13},
+  {c:'Pantry', b:'Aneela Africa',  n:'Granola Clusters',                    p:19},
+  {c:'Pantry', b:'Aneela Africa',  n:'Peanuts and Raisins, 70g',            p:13},
+  {c:'Pantry', b:'Aneela Africa',  n:'Peanuts and Cranberry, 70g',          p:25},
+  {c:'Pantry', b:'Aneela Africa',  n:'Peanut Butter, 250g',                 p:23},
+  {c:'Pantry', b:'Aneela Africa',  n:'Peanut Butter, 500g',                 p:32},
+  {c:'Pantry', b:'Aneela Africa',  n:'Fruit Mix',                           p:40},
+  {c:'Pantry', b:'Mo-Petals',      n:'Safflower Cooking Oil, 250ml',        p:220},
+  {c:'Pantry', b:'Sunquest',       n:'Instant Morogo wa Dinawa, 50g',       p:29.95},
+  {c:'Pantry', b:'Stlaaganeng',    n:'Dried Fruits',                        p:45},
+  {c:'Pantry', b:'Just Bots',      n:'Medjool Dates',                       p:45},
+  {c:'Pantry', b:'Just Bots',      n:'Oatmeal Raisin Cookies, 250g',        p:45},
+
+  // ---- Home ----
+  {c:'Home', b:'Luxe Homes Bw',       n:'Home Spray, 200ml',              p:100},
+  {c:'Home', b:'Luxe Homes Bw',       n:'Home Spray, 100ml',              p:50},
+  {c:'Home', b:'Luxe Homes Bw',       n:'Room Diffuser Refill, 200ml',    p:200},
+  {c:'Home', b:'Luxe Homes Bw',       n:'Room Diffuser Refill, 100ml',    p:100},
+  {c:'Home', b:'Luxe Homes Bw',       n:'Car Diffuser',                     p:60},
+  {c:'Home', b:'Luxe Homes Bw',       n:'Room Diffuser, OPN Collection, 200ml', p:250},
+  {c:'Home', b:'Aesthetic Candles',   n:'Diffuser, 100ml',                p:150},
+  {c:'Home', b:'Aesthetic Candles',   n:'Diffuser, 50ml',                 p:80},
+  {c:'Home', b:'Aesthetic Candles',   n:'Room Spray, 50ml',               p:70},
+  {c:'Home', b:'Aesthetic Candles',   n:'Car Diffuser',                   p:60},
+
+  // ---- Beauty ----
+  {c:'Beauty', b:'Mo-Petals',     n:'Safflower Tissue Oil, 100ml',        p:130},
+  {c:'Beauty', b:'Mo-Petals',     n:'Safflower Tissue Oil, 50ml',         p:78},
+  {c:'Beauty', b:'Mo-Petals',     n:'Safflower Hair Treatment Oil, 100ml',p:130},
+  {c:'Beauty', b:'Setlolo',       n:'Morula Nut Oil, 50ml',               p:104},
+  {c:'Beauty', b:'Setlolo',       n:'Lip Mousse with Morula Oil, 10ml',   p:32},
+
+  // ---- Books ----
+  {c:'Books', b:'Merapelo Lechaena', n:'Wails of Grief, paperback',       p:180},
+
+  // ---- Packages ----
+  {c:'Packages', b:'Just Bots', n:'Package 1, four item gift box',         p:250},
+  {c:'Packages', b:'Just Bots', n:'Package 2, eight item gift box',        p:360},
+  {c:'Packages', b:'Just Bots', n:'Package 3, ten item gift box',       p:470},
+];
+PRODUCTS.forEach((p,i)=>p.id='p'+i);
+const CATS = ['All','Pantry','Home','Beauty','Books','Packages'];
+
+/* ===================== state ===================== */
+const S = {
+  type:'quote', cat:'All', q:'', items:[], no:'',
+  settings:{url:'',bank:'',phone:'267 73820881',email:'precious@justbw.co.bw',valid:14}
+};
+const $ = s=>document.querySelector(s);
+const money = n => 'P'+(Math.round(n*100)/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(msg,bad){
+  const t=$('#toast'); t.textContent=msg; t.className='on'+(bad?' bad':'');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.className='',2800);
+}
+
+/* ===================== persistence ===================== */
+function loadLocal(){
+  try{
+    const s=JSON.parse(localStorage.getItem('jb_settings')||'null'); if(s) Object.assign(S.settings,s);
+    const u=localStorage.getItem('jb_user'); if(u) $('#user').value=u;
+    const d=JSON.parse(localStorage.getItem('jb_draft')||'null');
+    if(d){ S.type=d.type||'quote'; S.items=d.items||[]; S.no=d.no||''; restoreFields(d.fields||{}); }
+  }catch(e){}
+}
+function saveLocal(){
+  try{
+    localStorage.setItem('jb_settings',JSON.stringify(S.settings));
+    localStorage.setItem('jb_user',$('#user').value);
+    localStorage.setItem('jb_draft',JSON.stringify({type:S.type,items:S.items,no:S.no,fields:readFields()}));
+  }catch(e){}
+}
+function readFields(){
+  return {name:$('#cName').value,phone:$('#cPhone').value,email:$('#cEmail').value,addr:$('#cAddr').value,
+          date:$('#dDate').value,due:$('#dDue').value,notes:$('#dNotes').value,
+          disc:$('#tDisc').value,delSel:$('#tDelSel').value,del:$('#tDel').value};
+}
+function restoreFields(f){
+  $('#cName').value=f.name||''; $('#cPhone').value=f.phone||''; $('#cEmail').value=f.email||'';
+  $('#cAddr').value=f.addr||''; $('#dDate').value=f.date||''; $('#dDue').value=f.due||'';
+  $('#dNotes').value=f.notes||''; $('#tDisc').value=f.disc||0;
+  $('#tDelSel').value=f.delSel||'0'; $('#tDel').value=f.del||0;
+}
+
+/* ===================== catalogue ===================== */
+function renderChips(){
+  $('#chips').innerHTML = CATS.map(c=>
+    `<button class="chip" data-cat="${c}" aria-pressed="${c===S.cat}">${c}</button>`).join('');
+}
+function renderList(){
+  const q=S.q.trim().toLowerCase();
+  const rows = PRODUCTS.filter(p=>
+    (S.cat==='All'||p.c===S.cat) &&
+    (!q || (p.n+' '+p.b).toLowerCase().includes(q))
+  );
+  if(!rows.length){
+    $('#plist').innerHTML=`<div class="empty">Nothing matches that. Try a shorter search, or add a custom line.</div>`;
+    return;
+  }
+  $('#plist').innerHTML = rows.map(p=>{
+    const inDoc = S.items.filter(i=>i.id===p.id).reduce((s,i)=>s+i.qty,0);
+    return `<div class="prow ${inDoc?'on':''}">
+      <div class="pname"><small>${esc(p.b)}</small><b>${esc(p.n)}</b></div>
+      <div class="pprice">${money(p.p)}</div>
+      <button class="add ${inDoc?'has':''}" data-add="${p.id}">${inDoc?inDoc+' added':'Add'}</button>
+    </div>`;
+  }).join('');
+}
+
+/* ===================== document ===================== */
+function addItem(id){
+  const p=PRODUCTS.find(x=>x.id===id); if(!p) return;
+  const ex=S.items.find(i=>i.id===id);
+  if(ex) ex.qty++; else S.items.push({id:p.id,name:p.n,brand:p.b,price:p.p,qty:1});
+  render();
+}
+function renderLines(){
+  if(!S.items.length){
+    $('#lines').innerHTML=`<div class="empty" style="border:0">No items yet. Pick products from the list to build this ${S.type==='quote'?'quotation':'invoice'}.</div>`;
+    return;
+  }
+  $('#lines').innerHTML = S.items.map((it,ix)=>`
+    <div class="line">
+      <div class="ln">
+        <b>${esc(it.name)}</b>
+        <small>${esc(it.brand||'Custom')} · ${money(it.price)} each · <button class="editprice" data-price="${ix}">change price</button></small>
+      </div>
+      <div class="rt">
+        <div class="qty">
+          <button data-dec="${ix}" aria-label="Reduce quantity">−</button>
+          <input type="number" min="1" value="${it.qty}" data-qty="${ix}" aria-label="Quantity">
+          <button data-inc="${ix}" aria-label="Increase quantity">+</button>
+        </div>
+        <div class="amt">${money(it.price*it.qty)}</div>
+        <button class="kill" data-del="${ix}" aria-label="Remove line">×</button>
+      </div>
+    </div>`).join('');
+}
+function totals(){
+  const sub=S.items.reduce((s,i)=>s+i.price*i.qty,0);
+  const disc=Math.max(0,parseFloat($('#tDisc').value)||0);
+  const sel=$('#tDelSel').value;
+  const del = sel==='custom' ? (parseFloat($('#tDel').value)||0) : parseFloat(sel);
+  return {sub,disc,del,total:Math.max(0,sub-disc+del)};
+}
+function render(){
+  renderList(); renderLines();
+  const t=totals();
+  $('#tSub').textContent=money(t.sub);
+  $('#tTotal').textContent=money(t.total);
+  $('#mTotal').textContent=money(t.total);
+  const n=S.items.reduce((s,i)=>s+i.qty,0);
+  $('#mCount').textContent = n? (n===1?'1 item':n+' items') : 'No items yet';
+  $('#delCustomRow').style.display = $('#tDelSel').value==='custom' ? 'flex' : 'none';
+  saveLocal();
+}
+
+/* ===================== numbering ===================== */
+function localNo(){
+  const yr=new Date().getFullYear();
+  const key='jb_seq_'+S.type+'_'+yr;
+  const next=(parseInt(localStorage.getItem(key)||'0',10)+1);
+  localStorage.setItem(key,String(next));
+  return (S.type==='quote'?'JB-Q-':'JB-I-')+yr+'-'+String(next).padStart(3,'0');
+}
+async function newNumber(){
+  if(S.settings.url){
+    try{
+      const r=await fetch(S.settings.url+'?action=next&type='+S.type,{redirect:'follow'});
+      const j=await r.json();
+      if(j&&j.number){ S.no=j.number; $('#docNo').textContent=S.no; saveLocal(); return; }
+    }catch(e){ /* fall through to local */ }
+  }
+  S.no=localNo(); $('#docNo').textContent=S.no; saveLocal();
+}
+
+/* ===================== type toggle ===================== */
+function setType(t){
+  S.type=t;
+  $('#tQuote').setAttribute('aria-pressed',t==='quote');
+  $('#tInvoice').setAttribute('aria-pressed',t==='invoice');
+  $('#noLabel').textContent = t==='quote'?'Quotation number':'Invoice number';
+  $('#dueLabel').textContent = t==='quote'?'Valid until':'Payment due';
+  if(S.no){ S.no = S.no.replace(/JB-[QI]-/, t==='quote'?'JB-Q-':'JB-I-'); $('#docNo').textContent=S.no; }
+  render();
+}
+
+/* ===================== PDF ===================== */
+function docPayload(){
+  const t=totals(), f=readFields();
+  return {
+    type:S.type, number:S.no||'(unsaved)', by:$('#user').value,
+    date:f.date||new Date().toISOString().slice(0,10), due:f.due||'',
+    client:{name:f.name,phone:f.phone,email:f.email,addr:f.addr},
+    items:S.items.map(i=>({name:i.name,brand:i.brand,price:i.price,qty:i.qty,amount:i.price*i.qty})),
+    subtotal:t.sub, discount:t.disc, delivery:t.del, total:t.total, notes:f.notes
+  };
+}
+function makePdf(){
+  const d=docPayload();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(), M=44;
+  const OLIVE=[93,105,39], INK=[30,30,34], MID=[94,98,88];
+
+  // masthead
+  doc.setFillColor(243,240,223); doc.rect(0,0,W,96,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(24); doc.setTextColor(...INK);
+  doc.text('Just',M,50);
+  const jw=doc.getTextWidth('Just');
+  doc.setTextColor(...OLIVE); doc.text('BOTS',M+jw,50);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...MID);
+  doc.text('BY BATSWANA. FOR BOTSWANA',M,64);
+  doc.setFontSize(9);
+  const contact=[S.settings.phone,S.settings.email].filter(Boolean);
+  contact.forEach((l,i)=>doc.text(l,W-M,40+i*13,{align:'right'}));
+
+  // title bar
+  doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(...INK);
+  doc.text(d.type==='quote'?'QUOTATION':'INVOICE',M,132);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...MID);
+  doc.text(d.number,M,148);
+
+  const rl=[['Date',d.date]];
+  if(d.due) rl.push([d.type==='quote'?'Valid until':'Payment due',d.due]);
+  rl.push(['Prepared by',d.by]);
+  rl.forEach((r,i)=>{
+    doc.setTextColor(...MID); doc.text(r[0],W-M-118,132+i*14);
+    doc.setTextColor(...INK); doc.text(String(r[1]),W-M,132+i*14,{align:'right'});
+  });
+
+  // client
+  let y=176;
+  doc.setDrawColor(221,220,208); doc.line(M,y,W-M,y); y+=18;
+  doc.setFontSize(8); doc.setTextColor(...MID); doc.text('PREPARED FOR',M,y); y+=14;
+  doc.setFontSize(12); doc.setTextColor(...INK); doc.setFont('helvetica','bold');
+  doc.text(d.client.name||'Client',M,y); y+=14;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...MID);
+  [d.client.phone,d.client.email,d.client.addr].filter(Boolean).forEach(l=>{doc.text(l,M,y); y+=12;});
+
+  // table
+  doc.autoTable({
+    startY:y+12, margin:{left:M,right:M},
+    head:[['Item','Qty','Unit','Amount']],
+    body:d.items.map(i=>[
+      (i.brand&&i.brand!=='Custom'? i.brand+'  ':'')+i.name,
+      String(i.qty), money(i.price), money(i.amount)
+    ]),
+    headStyles:{fillColor:OLIVE,textColor:255,fontSize:9,fontStyle:'bold',cellPadding:7},
+    bodyStyles:{fontSize:9.5,textColor:INK,cellPadding:7},
+    alternateRowStyles:{fillColor:[249,248,243]},
+    columnStyles:{0:{cellWidth:'auto'},1:{cellWidth:44,halign:'center'},
+                  2:{cellWidth:70,halign:'right'},3:{cellWidth:80,halign:'right'}},
+    theme:'plain',
+    didDrawPage:()=>{}
+  });
+
+  // totals
+  let ty=doc.lastAutoTable.finalY+18;
+  const lx=W-M-190, rx=W-M;
+  const rows=[['Subtotal',money(d.subtotal)]];
+  if(d.discount) rows.push(['Discount','−'+money(d.discount)]);
+  rows.push(['Delivery', d.delivery? money(d.delivery):'Collection, free']);
+  doc.setFontSize(10);
+  rows.forEach(r=>{
+    doc.setTextColor(...MID); doc.text(r[0],lx,ty);
+    doc.setTextColor(...INK); doc.text(r[1],rx,ty,{align:'right'}); ty+=16;
+  });
+  doc.setDrawColor(...INK); doc.setLineWidth(1); doc.line(lx,ty-6,rx,ty-6); ty+=10;
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...INK);
+  doc.text('Total',lx,ty);
+  doc.setTextColor(...OLIVE); doc.text(money(d.total),rx,ty,{align:'right'});
+
+  // notes and banking
+  let by=ty+34;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...INK);
+  if(d.notes){
+    doc.setFontSize(8); doc.setTextColor(...MID); doc.text('NOTES',M,by); by+=13;
+    doc.setFontSize(9.5); doc.setTextColor(...INK);
+    doc.splitTextToSize(d.notes,W-M*2).forEach(l=>{doc.text(l,M,by); by+=12;});
+    by+=10;
+  }
+  if(d.type==='invoice' && S.settings.bank){
+    doc.setFontSize(8); doc.setTextColor(...MID); doc.text('PAYMENT',M,by); by+=13;
+    doc.setFontSize(9.5); doc.setTextColor(...INK);
+    S.settings.bank.split('\n').forEach(l=>{doc.text(l,M,by); by+=12;});
+  }
+  if(d.type==='quote'){
+    doc.setFontSize(9); doc.setTextColor(...MID);
+    doc.text('This quotation is valid for '+S.settings.valid+' days. Prices are in Pula and include all charges shown.',M,by);
+  }
+
+  // footer
+  const H=doc.internal.pageSize.getHeight();
+  doc.setDrawColor(221,220,208); doc.line(M,H-52,W-M,H-52);
+  doc.setFontSize(8.5); doc.setTextColor(...MID);
+  doc.text('Just Bots · Locally made pantry, home and beauty goods',M,H-36);
+  doc.text('Thank you for supporting Botswana makers',W-M,H-36,{align:'right'});
+
+  return {doc,d};
+}
+function downloadPdf(){
+  if(!S.items.length) return toast('Add at least one item first',true);
+  const {doc,d}=makePdf();
+  const who=(d.client.name||'client').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+  doc.save(`${d.number}-${who}.pdf`);
+  toast('PDF downloaded');
+}
+
+/* ===================== WhatsApp ===================== */
+function waText(){
+  const d=docPayload();
+  const L=[];
+  L.push(`*Just Bots ${d.type==='quote'?'Quotation':'Invoice'} ${d.number}*`);
+  if(d.client.name) L.push(`For: ${d.client.name}`);
+  L.push('');
+  d.items.forEach(i=>L.push(`${i.qty} x ${i.name} — ${money(i.amount)}`));
+  L.push('');
+  L.push(`Subtotal: ${money(d.subtotal)}`);
+  if(d.discount) L.push(`Discount: ${money(d.discount)}`);
+  L.push(`Delivery: ${d.delivery?money(d.delivery):'Collection, free'}`);
+  L.push(`*Total: ${money(d.total)}*`);
+  if(d.notes){ L.push(''); L.push(d.notes); }
+  if(d.type==='quote') L.push(`\nValid for ${S.settings.valid} days.`);
+  return L.join('\n');
+}
+function sendWa(){
+  if(!S.items.length) return toast('Add at least one item first',true);
+  const phone=$('#cPhone').value.replace(/\D/g,'');
+  const url='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(waText());
+  window.open(url,'_blank','noopener');
+}
+
+/* ===================== records ===================== */
+async function saveRecord(){
+  if(!S.items.length) return toast('Add at least one item first',true);
+  if(!S.no) await newNumber();
+  const payload=docPayload();
+  if(!S.settings.url){
+    toast('Saved on this device. Add your records URL in Settings to sync.',true);
+    saveLocal(); return;
+  }
+  const btn=$('#btnSave'); btn.disabled=true; btn.textContent='Saving';
+  try{
+    await fetch(S.settings.url,{
+      method:'POST', redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'save',doc:payload})
+    });
+    toast('Saved to records as '+S.no);
+  }catch(e){
+    toast('Could not reach your records. Check the URL in Settings.',true);
+  }
+  btn.disabled=false; btn.textContent='Save to records';
+}
+async function openHistory(){
+  $('#scrimHistory').classList.add('on');
+  const box=$('#hlist');
+  if(!S.settings.url){ box.innerHTML='<div class="empty">Add your records URL in Settings to see saved documents here.</div>'; return; }
+  box.innerHTML='<div class="empty">Loading</div>';
+  try{
+    const r=await fetch(S.settings.url+'?action=list',{redirect:'follow'});
+    const j=await r.json();
+    const rows=(j.rows||[]);
+    if(!rows.length){ box.innerHTML='<div class="empty">Nothing saved yet.</div>'; return; }
+    box.innerHTML=rows.map((r,i)=>`
+      <div class="hrow" data-load="${i}">
+        <div><b>${esc(r.number)}</b><small>${esc(r.client||'No name')} · ${esc(r.date||'')}</small></div>
+        <div class="amt">${money(r.total||0)}</div>
+      </div>`).join('');
+    box._rows=rows;
+  }catch(e){
+    box.innerHTML='<div class="empty">Could not reach your records. Check the URL in Settings.</div>';
+  }
+}
+function loadRecord(r){
+  S.type = /JB-I/.test(r.number)?'invoice':'quote';
+  S.no=r.number; $('#docNo').textContent=S.no;
+  let items=[]; try{ items=JSON.parse(r.items||'[]'); }catch(e){}
+  S.items=items.map(i=>({id:'x',name:i.name,brand:i.brand||'Custom',price:+i.price,qty:+i.qty}));
+  restoreFields({name:r.client,phone:r.phone,email:r.email,addr:r.addr,date:r.date,due:r.due,
+                 notes:r.notes,disc:r.discount,delSel:(+r.delivery===40?'40':(+r.delivery?'custom':'0')),del:r.delivery});
+  setType(S.type);
+  $('#scrimHistory').classList.remove('on');
+  toast('Loaded '+r.number);
+}
+
+/* ===================== events ===================== */
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.dataset.cat){ S.cat=t.dataset.cat; renderChips(); renderList(); return; }
+  if(t.dataset.add){ addItem(t.dataset.add); return; }
+  if(t.dataset.inc!==undefined){ S.items[+t.dataset.inc].qty++; render(); return; }
+  if(t.dataset.dec!==undefined){ const i=+t.dataset.dec; S.items[i].qty=Math.max(1,S.items[i].qty-1); render(); return; }
+  if(t.dataset.del!==undefined){ S.items.splice(+t.dataset.del,1); render(); return; }
+  if(t.dataset.price!==undefined){
+    const i=+t.dataset.price, cur=S.items[i];
+    const v=prompt(`New unit price for ${cur.name}`,cur.price);
+    if(v!==null && !isNaN(parseFloat(v))){ cur.price=Math.max(0,parseFloat(v)); render(); }
+    return;
+  }
+  if(t.dataset.load!==undefined){ const rows=$('#hlist')._rows||[]; loadRecord(rows[+t.dataset.load]); return; }
+  if(t.hasAttribute('data-close')){ t.closest('.scrim').classList.remove('on'); return; }
+  if(t.classList.contains('scrim')){ t.classList.remove('on'); }
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.qty!==undefined){ S.items[+t.dataset.qty].qty=Math.max(1,parseInt(t.value)||1); render(); }
+});
+$('#q').addEventListener('input',e=>{S.q=e.target.value;renderList();});
+$('#tQuote').onclick=()=>setType('quote');
+$('#tInvoice').onclick=()=>setType('invoice');
+$('#tDisc').oninput=render; $('#tDel').oninput=render; $('#tDelSel').onchange=render;
+['cName','cPhone','cEmail','cAddr','dDate','dDue','dNotes'].forEach(id=>$('#'+id).oninput=saveLocal);
+$('#user').onchange=saveLocal;
+$('#btnNewNo').onclick=newNumber;
+$('#btnPdf').onclick=downloadPdf;
+$('#btnWa').onclick=sendWa;
+$('#btnSave').onclick=saveRecord;
+$('#btnHistory').onclick=openHistory;
+$('#btnSettings').onclick=()=>{
+  $('#sUrl').value=S.settings.url; $('#sBank').value=S.settings.bank;
+  $('#sPhone').value=S.settings.phone; $('#sEmail').value=S.settings.email; $('#sValid').value=S.settings.valid;
+  $('#scrimSettings').classList.add('on');
+};
+$('#btnSaveSettings').onclick=()=>{
+  S.settings={url:$('#sUrl').value.trim(),bank:$('#sBank').value,
+              phone:$('#sPhone').value.trim(),email:$('#sEmail').value.trim(),
+              valid:parseInt($('#sValid').value)||14};
+  saveLocal(); $('#scrimSettings').classList.remove('on'); toast('Settings saved');
+};
+$('#btnCustom').onclick=()=>$('#scrimCustom').classList.add('on');
+$('#btnAddCustom').onclick=()=>{
+  const n=$('#xName').value.trim(), p=parseFloat($('#xPrice').value), q=parseInt($('#xQty').value)||1;
+  if(!n||isNaN(p)) return toast('Give the line a description and a price',true);
+  S.items.push({id:'x'+Date.now(),name:n,brand:'Custom',price:p,qty:q});
+  $('#xName').value=''; $('#xPrice').value=''; $('#xQty').value=1;
+  $('#scrimCustom').classList.remove('on'); render(); toast('Line added');
+};
+$('#btnClear').onclick=()=>{
+  if(!confirm('Clear this document and start again?')) return;
+  S.items=[]; S.no='';
+  restoreFields({}); $('#docNo').textContent='—';
+  render(); toast('Cleared');
+};
+$('#btnOpenDoc').onclick=()=>$('#doc').classList.add('open');
+$('#btnBack').onclick=()=>$('#doc').classList.remove('open');
+
+/* ===================== boot ===================== */
+(function init(){
+  loadLocal();
+  if(!$('#dDate').value) $('#dDate').value=new Date().toISOString().slice(0,10);
+  if(!$('#dDue').value){
+    const d=new Date(); d.setDate(d.getDate()+(S.settings.valid||14));
+    $('#dDue').value=d.toISOString().slice(0,10);
+  }
+  renderChips(); setType(S.type);
+  if(!S.no) newNumber(); else $('#docNo').textContent=S.no;
+  render();
+})();
+</script>
+</body>
+</html>
