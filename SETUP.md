@@ -13,10 +13,16 @@ Two files matter:
 ## 1. Put the app on GitHub Pages
 
 1. On github.com, create a new repository. Call it `justbots-docs`.
-2. Upload these six files to it, all in the root, not in a folder:
-   `index.html`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`,
-   `apple-touch-icon.png`. `Code.gs` and `SETUP.md` can go up too but are
-   not used by the site.
+2. Upload these seven files to it, all in the root, not in a folder:
+   `index.html`, `manifest.webmanifest`, `apple-touch-icon.png`,
+   `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`,
+   `icon-maskable-512.png`. `Code.gs` and `SETUP.md` can go up too but
+   are not used by the site.
+
+   There are two sets of icons on purpose. Android crops app icons to a
+   circle or a squircle depending on the phone, so the maskable pair is
+   drawn smaller to survive that crop. iPhone and browser tabs use the
+   other pair, which sits larger in the square.
 3. In the repo, open **Settings > Pages**.
 4. Under **Build and deployment**, set Source to **Deploy from a branch**,
    branch **main**, folder **/ (root)**. Save.
