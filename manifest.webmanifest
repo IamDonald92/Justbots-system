@@ -1,0 +1,15 @@
+{
+  "name": "Just Bots Quotes and Invoices",
+  "short_name": "Just Bots",
+  "description": "Build quotations and invoices from the Just Bots product list, save them to your records, download a PDF and send it on WhatsApp.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F0DF",
+  "theme_color": "#F3F0DF",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#5D6927">
+<meta name="theme-color" content="#F3F0DF">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Just Bots">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Just Bots · Quotes and Invoices</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -289,7 +296,7 @@ label.f input:focus,label.f textarea:focus{border-color:var(--olive);outline:non
     <div class="actions">
       <button class="btn olive full" id="btnSave">Save to records</button>
       <button class="btn" id="btnPdf">Download PDF</button>
-      <button class="btn out" id="btnWa">Send on WhatsApp</button>
+      <button class="btn out" id="btnWa">Send PDF on WhatsApp</button>
       <button class="btn out full" id="btnClear">Clear and start again</button>
     </div>
   </aside>
@@ -673,36 +680,74 @@ function makePdf(){
 
   return {doc,d};
 }
+function pdfName(d){
+  const who=(d.client.name||'client').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+  return `${d.number}-${who}.pdf`;
+}
 function downloadPdf(){
   if(!S.items.length) return toast('Add at least one item first',true);
   const {doc,d}=makePdf();
-  const who=(d.client.name||'client').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
-  doc.save(`${d.number}-${who}.pdf`);
+  doc.save(pdfName(d));
   toast('PDF downloaded');
 }
 
 /* ===================== WhatsApp ===================== */
-function waText(){
-  const d=docPayload();
+/* Short covering message that travels with the PDF. */
+function waNote(d){
+  const kind = d.type==='quote' ? 'quotation' : 'invoice';
+  const hi = d.client.name ? `Hello ${d.client.name.split(' ')[0]}, ` : 'Hello, ';
+  const L = [`${hi}here is your ${kind} from Just Bots.`];
+  L.push('');
+  L.push(`${d.type==='quote'?'Quotation':'Invoice'} ${d.number}`);
+  L.push(`Total ${money(d.total)}`);
+  if(d.type==='quote') L.push(`Valid for ${S.settings.valid} days`);
+  L.push('');
+  L.push('The full breakdown is in the attached PDF. Let us know if you would like anything changed.');
+  return L.join('\n');
+}
+/* Fallback text for desktop, where a file cannot be attached from the browser. */
+function waFullText(d){
   const L=[];
   L.push(`*Just Bots ${d.type==='quote'?'Quotation':'Invoice'} ${d.number}*`);
-  if(d.client.name) L.push(`For: ${d.client.name}`);
+  if(d.client.name) L.push(`For ${d.client.name}`);
   L.push('');
-  d.items.forEach(i=>L.push(`${i.qty} x ${i.name} — ${money(i.amount)}`));
+  d.items.forEach(i=>L.push(`${i.qty} x ${i.name}   ${money(i.amount)}`));
   L.push('');
-  L.push(`Subtotal: ${money(d.subtotal)}`);
-  if(d.discount) L.push(`Discount: ${money(d.discount)}`);
-  L.push(`Delivery: ${d.delivery?money(d.delivery):'Collection, free'}`);
-  L.push(`*Total: ${money(d.total)}*`);
+  L.push(`Subtotal ${money(d.subtotal)}`);
+  if(d.discount) L.push(`Discount ${money(d.discount)}`);
+  L.push(`Delivery ${d.delivery?money(d.delivery):'Collection, free'}`);
+  L.push(`*Total ${money(d.total)}*`);
   if(d.notes){ L.push(''); L.push(d.notes); }
   if(d.type==='quote') L.push(`\nValid for ${S.settings.valid} days.`);
   return L.join('\n');
 }
-function sendWa(){
+async function sendWa(){
   if(!S.items.length) return toast('Add at least one item first',true);
+  const {doc,d}=makePdf();
+  const name=pdfName(d);
+  const blob=doc.output('blob');
+  const file=new File([blob],name,{type:'application/pdf'});
+
+  // Phones: hand the actual PDF to the share sheet, pick WhatsApp there.
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({
+        files:[file],
+        title:`Just Bots ${d.type==='quote'?'Quotation':'Invoice'} ${d.number}`,
+        text:waNote(d)
+      });
+      return;
+    }catch(err){
+      if(err && err.name==='AbortError') return;   // user closed the sheet
+    }
+  }
+
+  // Desktop: browsers cannot attach a file to WhatsApp, so save the PDF and
+  // open the chat with the details, ready for the file to be dragged in.
+  doc.save(name);
   const phone=$('#cPhone').value.replace(/\D/g,'');
-  const url='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(waText());
-  window.open(url,'_blank','noopener');
+  window.open('https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(waFullText(d)),'_blank','noopener');
+  toast('PDF saved. Attach '+name+' in the WhatsApp window.');
 }
 
 /* ===================== records ===================== */
