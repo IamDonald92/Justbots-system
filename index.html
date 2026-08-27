@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#F3F0DF">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -27,14 +27,21 @@
   --shadow:0 1px 2px rgba(30,30,34,.05), 0 8px 24px rgba(30,30,34,.05);
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0; overscroll-behavior-y:contain}
+html{touch-action:manipulation}
 body{
   background:var(--bg); color:var(--ink);
   font-family:Outfit,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   font-size:15px; line-height:1.45; -webkit-text-size-adjust:100%;
+  touch-action:manipulation;
 }
-button,input,select,textarea{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit;touch-action:manipulation}
 button{cursor:pointer}
+/* iOS zooms the whole page in on any text input smaller than 16px when it
+   gains focus. This is very likely the "stretching" you are seeing, it is
+   not scroll misbehaving, it is Safari reacting to the tap. Every field a
+   thumb can tap is kept at 16px or above so that never triggers. */
+input,select,textarea{font-size:16px}
 :focus-visible{outline:2px solid var(--olive);outline-offset:2px;border-radius:3px}
 
 /* ---------- chrome ---------- */
@@ -50,7 +57,7 @@ header{
 .who{display:flex;align-items:center;gap:6px}
 .who select{
   background:var(--paper);border:1px solid var(--line);border-radius:var(--r);
-  padding:6px 9px;font-size:13px;font-weight:500
+  padding:6px 9px;font-size:16px;font-weight:500
 }
 .ghost{
   background:transparent;border:1px solid var(--line);border-radius:var(--r);
@@ -64,7 +71,8 @@ header{
 .doc{
   border-left:1px solid var(--line); background:var(--paper);
   min-height:calc(100vh - 53px); padding:16px; position:sticky; top:53px;
-  max-height:calc(100vh - 53px); overflow-y:auto;
+  max-height:calc(100vh - 53px); overflow-y:auto; overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
 }
 
 /* ---------- catalogue ---------- */
@@ -123,7 +131,7 @@ label.f{display:block}
 label.f span{display:block;font-size:11px;color:var(--mid);margin-bottom:3px;font-weight:500}
 label.f input,label.f textarea,label.f select{
   width:100%;background:var(--paper);border:1px solid var(--line);
-  border-radius:var(--r);padding:8px 10px;font-size:14px
+  border-radius:var(--r);padding:8px 10px;font-size:16px
 }
 label.f textarea{resize:vertical;min-height:56px}
 label.f input:focus,label.f textarea:focus{border-color:var(--olive);outline:none}
@@ -137,7 +145,7 @@ label.f input:focus,label.f textarea:focus{border-color:var(--olive);outline:non
 .qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .qty button{border:0;background:var(--paper);width:26px;height:28px;font-size:15px;line-height:1;color:var(--mid)}
 .qty button:hover{background:var(--olive-lt);color:var(--olive)}
-.qty input{width:38px;border:0;text-align:center;padding:0;height:28px;font-variant-numeric:tabular-nums;font-size:13.5px}
+.qty input{width:44px;border:0;text-align:center;padding:0;height:30px;font-variant-numeric:tabular-nums;font-size:16px}
 .amt{font-variant-numeric:tabular-nums;font-weight:600;min-width:74px;text-align:right;font-size:14px}
 .kill{border:0;background:none;color:var(--faint);font-size:17px;line-height:1;padding:0 2px}
 .kill:hover{color:var(--red)}
@@ -151,7 +159,7 @@ label.f input:focus,label.f textarea:focus{border-color:var(--olive);outline:non
 .trow.grand{border-top:1px solid var(--line);margin-top:6px;padding-top:9px;font-size:19px}
 .trow.grand span{color:var(--ink);font-weight:600}
 .trow.grand b{font-weight:700;color:var(--olive)}
-.tinput{width:92px;border:1px solid var(--line);border-radius:var(--r);padding:5px 8px;text-align:right;font-variant-numeric:tabular-nums;font-size:13.5px}
+.tinput{width:98px;border:1px solid var(--line);border-radius:var(--r);padding:5px 8px;text-align:right;font-variant-numeric:tabular-nums;font-size:16px}
 
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .btn{
@@ -310,7 +318,8 @@ label.f input:focus,label.f textarea:focus{border-color:var(--olive);outline:non
 <!-- ============ MODALS ============ -->
 <div class="scrim" id="scrimHistory"><div class="modal">
   <h2>Saved documents</h2>
-  <p class="sub">The most recent quotes and invoices from your records. Tap one to load it back in.</p>
+  <p class="sub">Every quote and invoice saved by either of you, newest first.</p>
+  <div class="chips" id="hchips" style="margin-bottom:10px"></div>
   <div class="hlist" id="hlist"></div>
   <div class="actions" style="margin-top:14px"><button class="btn out full" data-close>Close</button></div>
 </div></div>
@@ -774,23 +783,42 @@ async function saveRecord(){
 }
 async function openHistory(){
   $('#scrimHistory').classList.add('on');
-  const box=$('#hlist');
-  if(!S.settings.url){ box.innerHTML='<div class="empty">Add your records URL in Settings to see saved documents here.</div>'; return; }
-  box.innerHTML='<div class="empty">Loading</div>';
+  const box=$('#hlist'), chips=$('#hchips');
+  if(!S.settings.url){
+    chips.innerHTML='';
+    box.innerHTML='<div class="empty">Add your records URL in Settings to see saved documents here. Make sure both phones use the exact same URL, otherwise you will each be looking at a different sheet.</div>';
+    return;
+  }
+  box.innerHTML='<div class="empty">Loading</div>'; chips.innerHTML='';
   try{
     const r=await fetch(S.settings.url+'?action=list',{redirect:'follow'});
     const j=await r.json();
     const rows=(j.rows||[]);
-    if(!rows.length){ box.innerHTML='<div class="empty">Nothing saved yet.</div>'; return; }
-    box.innerHTML=rows.map((r,i)=>`
-      <div class="hrow" data-load="${i}">
-        <div><b>${esc(r.number)}</b><small>${esc(r.client||'No name')} · ${esc(r.date||'')}</small></div>
-        <div class="amt">${money(r.total||0)}</div>
-      </div>`).join('');
     box._rows=rows;
+    if(!rows.length){ box.innerHTML='<div class="empty">Nothing saved yet, by either of you.</div>'; return; }
+
+    // who has actually saved something, built from the data itself so this
+    // never needs updating if a third person joins later
+    const people=['All',...Array.from(new Set(rows.map(r=>r.by).filter(Boolean)))];
+    S.hFilter = people.includes(S.hFilter) ? S.hFilter : 'All';
+    chips.innerHTML=people.map(p=>
+      `<button class="chip" data-hfilter="${esc(p)}" aria-pressed="${p===S.hFilter}">${esc(p)}</button>`).join('');
+    renderHistoryRows();
   }catch(e){
     box.innerHTML='<div class="empty">Could not reach your records. Check the URL in Settings.</div>';
   }
+}
+function renderHistoryRows(){
+  const box=$('#hlist'); const rows=box._rows||[];
+  const shown = S.hFilter==='All' ? rows : rows.filter(r=>r.by===S.hFilter);
+  if(!shown.length){ box.innerHTML=`<div class="empty">Nothing saved by ${esc(S.hFilter)} yet.</div>`; return; }
+  box.innerHTML = shown.map((r)=>{
+    const ix=rows.indexOf(r);
+    return `<div class="hrow" data-load="${ix}">
+      <div><b>${esc(r.number)}</b><small>${esc(r.client||'No name')} · ${esc(r.date||'')} · prepared by ${esc(r.by||'—')}</small></div>
+      <div class="amt">${money(r.total||0)}</div>
+    </div>`;
+  }).join('');
 }
 function loadRecord(r){
   S.type = /JB-I/.test(r.number)?'invoice':'quote';
@@ -808,6 +836,7 @@ function loadRecord(r){
 document.addEventListener('click',e=>{
   const t=e.target;
   if(t.dataset.cat){ S.cat=t.dataset.cat; renderChips(); renderList(); return; }
+  if(t.dataset.hfilter){ S.hFilter=t.dataset.hfilter; document.querySelectorAll('#hchips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.hfilter===S.hFilter)); renderHistoryRows(); return; }
   if(t.dataset.add){ addItem(t.dataset.add); return; }
   if(t.dataset.inc!==undefined){ S.items[+t.dataset.inc].qty++; render(); return; }
   if(t.dataset.dec!==undefined){ const i=+t.dataset.dec; S.items[i].qty=Math.max(1,S.items[i].qty-1); render(); return; }
